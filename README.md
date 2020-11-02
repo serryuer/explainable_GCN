@@ -1,6 +1,14 @@
 # explainable_GCN
 
 
+## 环境配置
+```
+conda create -n gcn-py36 python=3.6.10
+conda activate gcn-py36
+pip install -r requirements.txt
+```
+
+
 ## 模型训练
 
 1. 输入id，经过embedding得到nodesize维的向量
