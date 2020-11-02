@@ -13,7 +13,7 @@ from tqdm import tqdm
 import torch
 from torch_geometric.data import Data
 
-sys.argv.append('mr')
+# sys.argv.append('mr')
 
 if len(sys.argv) != 2:
 	sys.exit("Use: python build_graph.py <dataset>")

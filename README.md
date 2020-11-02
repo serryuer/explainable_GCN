@@ -7,9 +7,31 @@ conda create -n gcn-py36 python=3.6.10
 conda activate gcn-py36
 pip install -r requirements.txt
 ```
-
+如果环境配置失败，可以下载我上传到google driver的环境https://drive.google.com/file/d/1W-Ti1ycIhS7zxcvApMgIwCSHyjGkFGbg/view?usp=sharing，找我加一下权限
 
 ## 模型训练
+
+```
+# 数据构造：
+
+python build_graoh.py mr
+
+python train_gcn.py \
+    -lr 0.01 \
+    -dataset_name mr \
+    -dropout 0.5 \
+    -epochs 100 \
+    -gcn_layers 1 \
+    -embed_dim 200 \
+    -embed_fintune True \
+    -hidden_size 256 \
+    -node_size 29426 \
+    -random_seed 42 \
+    -device 2 \
+    -model_name mr_id \
+    -save_best_model False \
+    -output_size 2
+```
 
 1. 输入id，经过embedding得到nodesize维的向量
 
@@ -56,6 +78,10 @@ TODO:
 
 
 ## 模型可解释性
+
+```
+explain_gcn.ipynb
+```
 
 算法参考[Captum Algorithm](https://captum.ai/docs/algorithms)
 

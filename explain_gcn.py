@@ -97,9 +97,9 @@ def add_attributions_to_visualizer(attributions, text, token_ids, pred, pred_ind
     other_tokens_attributions = {id_word_map[index - doc_size]: float(attributions[index]) for index in other_tokens_index if index not in node_ids}
     print('all tokens with attributions in this doc')
     print(json.dumps({token: float(attribution) for token, attribution in zip(text, tokens_attributions)}, indent=4, ensure_ascii=False))
-    print(f'other words -{len(other_tokens_attributions)}- and attribution in top 100 nodes')
+    print(f'other words -{len(other_tokens_attributions)}- and attribution in top {top_k} nodes')
     print(json.dumps(other_tokens_attributions, indent=4, ensure_ascii=False))
-    print(f'docs -{len(doc_attributions)}- and attribution in top 100 nodes')
+    print(f'docs -{len(doc_attributions)}- and attribution in top {top_k} nodes')
     print(json.dumps(doc_attributions, indent=4, ensure_ascii=False))
     vis_data_records.append(visualization.VisualizationDataRecord(
                             tokens_attributions,

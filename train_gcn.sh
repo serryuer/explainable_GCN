@@ -3,7 +3,7 @@ python train_gcn.py \
     -dataset_name mr \
     -dropout 0.5 \
     -epochs 100 \
-    -gcn_layers 1 \
+    -gcn_layers 2 \
     -embed_dim 200 \
     -embed_fintune True \
     -hidden_size 256 \
@@ -18,7 +18,7 @@ python train_gcn.py \
     -lr 0.01 \
     -dataset_name mr \
     -dropout 0.5 \
-    -epochs 100 \
+    -epochs 200 \
     -gcn_layers 2 \
     -embed_dim 200 \
     -embed_fintune True \

@@ -66,6 +66,7 @@ data = pkl.load(open(
 
 device = torch.device(
     f'cuda:{args.device}' if torch.cuda.is_available() else 'cpu')
+print(args)
 model = GCNNet(node_size=args.node_size,
                embed_dim=args.embed_dim,
                embedding_finetune=args.embed_fintune,
@@ -86,7 +87,6 @@ def train():
     loss.backward()
     print(loss)
     optimizer.step()
-
 
 def test():
     model.eval()
