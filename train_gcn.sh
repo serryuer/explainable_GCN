@@ -8,3 +8,7 @@ python train_gcn.py -dataset_name 20ng -node_size 61603 -output_size
 python train_gcn_with_label.py -lr 0.001 -dataset_name R8 -node_size 15370 -output_size 8
 
 
+python train_hgcn.py -lr 0.001 -dataset_name R8 -node_size 15362 -output_size 8
+
+
+python train_hgcn_label.py -lr 0.001 -dataset_name R8 -node_size 15370 -output_size 8 -device 4

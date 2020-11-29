@@ -49,7 +49,7 @@ parser.add_argument('-save_dir', type=str,
 parser.add_argument('-model_name', type=str,
                     default='mr-hgcn', help='model name')
 parser.add_argument('-early_stop_patience', type=int,
-                    default=30, help='early stop patience')
+                    default=100, help='early stop patience')
 parser.add_argument('-output_size', type=int, default=2,
                     help='number of classification [default: 2]')
 parser.add_argument('-save_best_model', type=bool,

@@ -96,9 +96,9 @@ TODO:
 |  模型  |  参数 |  acc |
 |  ----  | ----  | ---- |
 | TextGCN | lr=0.001, hidden=512, embed=512, layer=2 | 0.9707 |
-| TextGCN-Label | lr=0.01, hidden=512, embed=512, layer=2 | 0.760 |
-| TextHGCN | lr=0.001, hidden=256, embed=256, layer=3 | 0.751 |
-| TextHGCN-Label| lr=0.001, hidden=256, embed=256, layer=2 | 0.734 |
+| TextGCN-Label | lr=0.001, hidden=512, embed=512, layer=2 | 0.9703 |
+| TextHGCN | lr=0.001, hidden=256, embed=256, layer=3 | 0.9643 |
+| TextHGCN-Label| lr=0.001, hidden=256, embed=256, layer=2 | 0.9607 |
 
 ## 模型可解释性
 
