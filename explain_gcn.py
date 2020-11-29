@@ -11,7 +11,7 @@ import numpy as np
 
 
 alg_map = {
-    
+     
 }
 
 
@@ -64,14 +64,15 @@ def plot_with_networkx(node_indexes, node_texts, node_weights):
     plt.rcParams['font.sans-serif'] = ['SimHei'] 
     plt.rcParams['font.family']='sans-serif'
 
-    g = nx.DiGraph();
-    g.clear();
+    g = nx.DiGraph()
+    g.clear()
     
     for i, index in enumerate(node_indexes):
         for neighbor, weight in enumerate(adj[index]):
             if neighbor in node_indexes and neighbor != index:
-                g.add_edge(f"{node_weights[i]}:{node_texts[i]}", f"{node_weights[node_indexes.index(neighbor)]}:{node_texts[node_indexes.index(neighbor)]}", weight=weight)
-    print(g);
+                # g.add_edge(f"{node_weights[i]}:{node_texts[i]}", f"{node_weights[node_indexes.index(neighbor)]}:{node_texts[node_indexes.index(neighbor)]}", weight=weight)
+                g.add_edge(node_indexes.index(index), node_indexes.index(neighbor), weight=weight)
+    print(g)
     print(g.nodes())
     print(g.nodes().data()) # 显示边的数据
     print(g.edges().data())
@@ -89,18 +90,26 @@ def add_attributions_to_visualizer(attributions, text, token_ids, pred, pred_ind
     attributions = attributions.cpu().detach().numpy()
     node_ids = [id + len(docs) for id in token_ids]
     tokens_attributions = attributions[node_ids]
-    sorted_index = np.argsort(-attributions)
-    top_k_index = sorted_index[:top_k]
-    other_tokens_index = np.array([index for index in top_k_index if index >= doc_size])
-    doc_index = np.array([index for index in top_k_index if index < doc_size])
-    doc_attributions = {docs[index]: float(attributions[index]) for index in doc_index}
-    other_tokens_attributions = {id_word_map[index - doc_size]: float(attributions[index]) for index in other_tokens_index if index not in node_ids}
+    sorted_index_h = np.argsort(-attributions)
+    sorted_index_l = np.argsort(attributions)
+    top_k_index_h = sorted_index_h[:top_k]
+    top_k_index_l = sorted_index_l[:top_k]
+    other_tokens_index_h = np.array([index for index in top_k_index_h if index >= doc_size and index not in node_ids])
+    other_tokens_index_l = np.array([index for index in top_k_index_l if index >= doc_size and index not in node_ids])
+    other_tokens_attributions_h = {id_word_map[index - doc_size]: float(attributions[index]) for index in other_tokens_index_h if index not in node_ids}
+    other_tokens_attributions_l = {id_word_map[index - doc_size]: float(attributions[index]) for index in other_tokens_index_l if index not in node_ids}
+    doc_index_h = np.array([index for index in top_k_index_h if index < doc_size])
+    doc_index_l = np.array([index for index in top_k_index_l if index < doc_size])
+    doc_attributions_h = {docs[index]: float(attributions[index]) for index in doc_index_h}
+    doc_attributions_l = {docs[index]: float(attributions[index]) for index in doc_index_l}
     print('all tokens with attributions in this doc')
     print(json.dumps({token: float(attribution) for token, attribution in zip(text, tokens_attributions)}, indent=4, ensure_ascii=False))
-    print(f'other words -{len(other_tokens_attributions)}- and attribution in top {top_k} nodes')
-    print(json.dumps(other_tokens_attributions, indent=4, ensure_ascii=False))
-    print(f'docs -{len(doc_attributions)}- and attribution in top {top_k} nodes')
-    print(json.dumps(doc_attributions, indent=4, ensure_ascii=False))
+    print(f'other words -{len(other_tokens_attributions_h)}- and attribution in top {top_k} nodes')
+    print(json.dumps(other_tokens_attributions_h, indent=4, ensure_ascii=False))
+    print(json.dumps(other_tokens_attributions_l, indent=4, ensure_ascii=False))
+    print(f'docs -{len(doc_attributions_h)}- and attribution in top {top_k} nodes')
+    print(json.dumps(doc_attributions_h, indent=4, ensure_ascii=False))
+    print(json.dumps(doc_attributions_l, indent=4, ensure_ascii=False))
     vis_data_records.append(visualization.VisualizationDataRecord(
                             tokens_attributions,
                             pred,
@@ -110,11 +119,12 @@ def add_attributions_to_visualizer(attributions, text, token_ids, pred, pred_ind
                             tokens_attributions.sum(),       
                             text,
                             delta))
-    node_indexes = np.concatenate([top_k_index, node_ids])
-    node_texts = [docs[index] if index < doc_size else id_word_map[index - doc_size] for index in top_k_index]
-    node_texts += text
+    node_indexes = np.concatenate([top_k_index_h, top_k_index_l, node_ids])
+    node_texts = [str(index) if index < doc_size else id_word_map[index - doc_size] for index in node_indexes]
+    
     node_weights = attributions[node_indexes]
     plot_with_networkx(node_indexes.tolist(), node_texts, node_weights.tolist())
+
 
 
 def interpret_sentence(docid):
@@ -125,7 +135,7 @@ def interpret_sentence(docid):
     pred_ind = round(pred.detach().cpu().item())
     # compute attributions and approximation delta using layer integrated gradients
     token_reference = TokenReferenceBase(reference_token_idx=0)
-    reference_indices = token_reference.generate_reference(data.x.shape[0], device='cuda:2').unsqueeze(0)
+    reference_indices = token_reference.generate_reference(data.x.shape[0], device='cuda:3').unsqueeze(0)
     attributions_ig, delta = lig.attribute(data.x.unsqueeze(0), 
                                            reference_indices, 
                                            additional_forward_args=(data.edge_index.unsqueeze(0), data.edge_attr.unsqueeze(0), docid), 
@@ -137,7 +147,7 @@ def interpret_sentence(docid):
     add_attributions_to_visualizer(attributions_ig, tokens, token_ids, pred, pred_ind, label, delta, vis_data_records_ig)
     visualization.visualize_text(vis_data_records_ig)
     
-device = torch.device(f'cuda:2' if torch.cuda.is_available() else 'cpu')
+device = torch.device(f'cuda:3' if torch.cuda.is_available() else 'cpu')
 data = pkl.load(open(f"data/{datasets}/graph/ind.{datasets}_id", 'rb'), encoding='latin1')
 adj = sp.csr_matrix((data.edge_attr.cpu().numpy(), (data.edge_index[0].cpu().numpy(), data.edge_index[1].cpu().numpy())), shape=(data.x.shape[0], data.x.shape[0]))
 adj = adj.toarray()

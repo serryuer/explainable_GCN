@@ -13,7 +13,7 @@ from tqdm import tqdm
 import torch
 from torch_geometric.data import Data
 
-# sys.argv.append('mr')
+sys.argv.append('mr')
 
 if len(sys.argv) != 2:
 	sys.exit("Use: python build_graph.py <dataset>")
@@ -44,6 +44,7 @@ doc_size = len(docs)
 vocab_size = len(vocab)
 
 node_size = len(vocab) + len(docs)
+print(node_size)
 train_mask = torch.tensor(np.array([1] * train_size + [0] * (node_size - train_size), dtype=np.bool))
 test_mask = torch.tensor(np.array([0] * train_size + [1] * test_size + [0] * vocab_size, dtype=np.bool))
 labels = torch.tensor([item[1] for item in train_set] + [item[1] for item in test_set] + [-1] * vocab_size)
@@ -88,7 +89,6 @@ for window in tqdm(windows, desc='parse word pair in a window'):
                 continue
             word_pair_count[str(word_i_id) + ',' + str(word_j_id)] += 1
             word_pair_count[str(word_j_id) + ',' + str(word_i_id)] += 1
-
 
 # pmi as weights
 num_window = len(windows)
@@ -141,16 +141,19 @@ for i in tqdm(range(doc_size), desc='cal word-doc weight for graph'):
                   word_doc_freq[vocab[j]])
         edge_weight.append(freq * idf)
         doc_word_set.add(word)
-
+        
 adj = sp.csr_matrix((edge_weight, (edge_index_x, edge_index_y)), shape=(node_size, node_size))
-adj = adj + adj.T.multiply(adj.T > adj) - adj.multiply(adj.T > adj)
-adj = adj + sp.eye(adj.shape[0])
-adj = sp.coo_matrix(adj)
-rowsum = np.array(adj.sum(1))
-d_inv_sqrt = np.power(rowsum, -0.5).flatten()
-d_inv_sqrt[np.isinf(d_inv_sqrt)] = 0.
-d_mat_inv_sqrt = sp.diags(d_inv_sqrt)
-adj = adj.dot(d_mat_inv_sqrt).transpose().dot(d_mat_inv_sqrt).tocoo()
+
+def format_adj(adj):
+    adj = adj + adj.T.multiply(adj.T > adj) - adj.multiply(adj.T > adj)
+    # adj = adj + sp.eye(adj.shape[0])
+    # adj = sp.coo_matrix(adj)
+    # rowsum = np.array(adj.sum(1))
+    # d_inv_sqrt = np.power(rowsum, -0.5).flatten()
+    # d_inv_sqrt[np.isinf(d_inv_sqrt)] = 0.
+    # d_mat_inv_sqrt = sp.diags(d_inv_sqrt)
+    # adj = adj.dot(d_mat_inv_sqrt).transpose().dot(d_mat_inv_sqrt).tocoo()
+    return adj
 
 def to_tuple(mx):
     if not sp.isspmatrix_coo(mx):
@@ -159,6 +162,8 @@ def to_tuple(mx):
     values = mx.data
     shape = mx.shape
     return coords, values, shape
+
+adj = format_adj(adj)
 
 if isinstance(adj, list):
     for i in range(len(adj)):
@@ -187,7 +192,7 @@ data_id = Data(x=torch.tensor([i for i in range(node_size)], dtype=torch.long),
             edge_attr = torch.tensor(edge_weight, dtype=torch.float32))
 
 # dump objects
-with open(f"data/{dataset}/graph/ind.{dataset}_onehot", 'wb') as f:
+with open(f"data/{dataset}/graph/ind.{dataset}_onehot_without_format", 'wb') as f:
     pkl.dump(data_onehot, f)
-with open(f"data/{dataset}/graph/ind.{dataset}_id", 'wb') as f:
+with open(f"data/{dataset}/graph/ind.{dataset}_id_without_format", 'wb') as f:
     pkl.dump(data_id, f)

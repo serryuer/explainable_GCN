@@ -33,6 +33,8 @@ python train_gcn.py \
     -output_size 2
 ```
 
+### TextGCN
+
 1. 输入id，经过embedding得到nodesize维的向量
 
 |  参数   |  acc |
@@ -67,6 +69,7 @@ python train_gcn.py \
 | lr=0.01, hidden=256, embed=200 | 0.764 |
 
 4. 调整layer层数
+
 TODO:
 
 |  参数   |  acc |
@@ -77,6 +80,26 @@ TODO:
 | lr=0.01, hidden=256, embed=200, layer=4 | 0.753 |
 
 
+### Add label 
+
+#### MR
+
+|  模型  |  参数 |  acc |
+|  ----  | ----  | ---- |
+| TextGCN | lr=0.01, hidden=512, embed=512, layer=2 | 0.764 |
+| TextGCN-Label | lr=0.01, hidden=512, embed=512, layer=2 | 0.760 |
+| TextHGCN | lr=0.001, hidden=256, embed=256, layer=3 | 0.751 |
+| TextHGCN-Label| lr=0.001, hidden=256, embed=256, layer=2 | 0.734 |
+
+#### R8
+
+|  模型  |  参数 |  acc |
+|  ----  | ----  | ---- |
+| TextGCN | lr=0.001, hidden=512, embed=512, layer=2 | 0.9707 |
+| TextGCN-Label | lr=0.01, hidden=512, embed=512, layer=2 | 0.760 |
+| TextHGCN | lr=0.001, hidden=256, embed=256, layer=3 | 0.751 |
+| TextHGCN-Label| lr=0.001, hidden=256, embed=256, layer=2 | 0.734 |
+
 ## 模型可解释性
 
 ```
@@ -84,4 +107,6 @@ explain_gcn.ipynb
 ```
 
 算法参考[Captum Algorithm](https://captum.ai/docs/algorithms)
+
+
 

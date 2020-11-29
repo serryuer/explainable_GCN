@@ -13,17 +13,20 @@ class GCNNet(torch.nn.Module):
                  hidden_dim = 512, 
                  num_class = 2,
                  dropout = 0.5,
-                 layers = 2):
+                 layers = 2,
+                 normalize = True):
         super(GCNNet, self).__init__()
         self.node_size = node_size
         self.embed_dim = embed_dim
         self.embed = torch.nn.Embedding(num_embeddings=node_size, embedding_dim=embed_dim)
         self.embedding_finetune = embedding_finetune
-        self.convs = torch.nn.ModuleList([GCNConv(embed_dim, hidden_dim, normalize=False)])
-        self.convs.extend([GCNConv(hidden_dim, hidden_dim, normalize=False) for i in range(layers - 2)])
-        self.convs.append(GCNConv(hidden_dim, num_class, normalize=False))
+        self.convs = torch.nn.ModuleList([GCNConv(embed_dim, hidden_dim, normalize=normalize)])
+        self.convs.extend([GCNConv(hidden_dim, hidden_dim, normalize=normalize) for i in range(layers - 2)])
+        self.convs.append(GCNConv(hidden_dim, hidden_dim, normalize=normalize))
         self._weight_init_()
         self.dropout = dropout
+        
+        self.classifier = torch.nn.Linear(hidden_dim, num_class)
 
     def _weight_init_(self):
         for conv in self.convs:
@@ -35,9 +38,12 @@ class GCNNet(torch.nn.Module):
             self.embed.weight.copy_(torch.tensor(torch.eye(self.node_size, self.embed_dim), dtype=torch.float32))
 
     def forward(self, x, edge_index, edge_attr):
-        edge_index, edge_attr = edge_index.squeeze(), edge_attr.squeeze()
+        edge_index = edge_index.squeeze()
         x = self.embed(x).squeeze()
         for conv in self.convs:
             x = F.dropout(x, p=self.dropout, training=self.training)
-            x = F.relu(conv(x, edge_index, edge_weight=edge_attr))
+            # x = F.relu(conv(x, edge_index, edge_weight=edge_attr))
+            x = F.relu(conv(x, edge_index))
+            
         return F.log_softmax(x, dim=1)
+        # return self.classifier(x)

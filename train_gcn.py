@@ -15,42 +15,42 @@ C_LogFormat = '%(asctime)s - %(levelname)s - %(message)s'
 logging.basicConfig(level=logging.INFO, format=C_LogFormat)
 
 node_size_map = {
-    'mr_id': 29426,
-    'mr_onehot': 29426
+    'mr': 29426,
+    'R8': 15362
 }
 
 # Training settings
 parser = argparse.ArgumentParser(
     description="text gcn with pytorch + torch_geometric")
 parser.add_argument('-dataset_name', type=str,
-                    default='mr', help='data sets name')
-parser.add_argument('-lr', type=float, default=0.01,
+                    default='R8', help='data sets name')
+parser.add_argument('-lr', type=float, default=0.001,
                     help='initial learning rate [default: 0.001]')
 parser.add_argument('-dropout', type=float, default=0.5,
                     help='the probability for dropout [default: 0.5]')
-parser.add_argument('-epochs', type=int, default=16,
+parser.add_argument('-epochs', type=int, default=1000,
                     help='number of epochs for train [default: 20]')
-parser.add_argument('-gcn_layers', type=int, default=4,
+parser.add_argument('-gcn_layers', type=int, default=2,
                     help='the network layer [default 2]')
-parser.add_argument('-embed_dim', type=int, default=1024,
+parser.add_argument('-embed_dim', type=int, default=512,
                     help='the size of node embedding')
-parser.add_argument('-embed_fintune', type=bool, default=False,
+parser.add_argument('-embed_fintune', type=bool, default=True,
                     help='whether finetune embedding layer')
 parser.add_argument('-hidden_size', type=int, default=512,
                     help='number of hidden size for one rnn cell [default: 512]')
-parser.add_argument('-node_size', type=int, default=29426,
+parser.add_argument('-node_size', type=int, default=15362,
                     help='number of embedding dimension [default: 128]')
 parser.add_argument('-random_seed', type=int,
-                    default=1024, help='attention size')
-parser.add_argument('-device', type=int, default=0,
+                    default=42, help='attention size')
+parser.add_argument('-device', type=int, default=1,
                     help='device to use for iterate data, -1 mean cpu,1 mean gpu [default: -1]')
 parser.add_argument('-save_dir', type=str,
                     default='experiments', help='where to save the snapshot')
 parser.add_argument('-model_name', type=str,
                     default='mr-gcn', help='model name')
 parser.add_argument('-early_stop_patience', type=int,
-                    default=30, help='early stop patience')
-parser.add_argument('-output_size', type=int, default=2,
+                    default=100, help='early stop patience')
+parser.add_argument('-output_size', type=int, default=8,
                     help='number of classification [default: 2]')
 parser.add_argument('-save_best_model', type=bool,
                     default=False, help='whether save best model')
@@ -62,7 +62,7 @@ torch.cuda.manual_seed(args.random_seed)
 np.random.seed(args.random_seed)
 
 data = pkl.load(open(
-    f"data/{args.dataset_name}/graph/ind.{args.dataset_name}_id", 'rb'), encoding='latin1')
+    f"../{args.dataset_name}/graph/ind.{args.dataset_name}_id", 'rb'), encoding='latin1')
 
 device = torch.device(
     f'cuda:{args.device}' if torch.cuda.is_available() else 'cpu')
@@ -82,8 +82,8 @@ optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 def train():
     model.train()
     optimizer.zero_grad()
-    loss = F.nll_loss(model(data.x, data.edge_index, data.edge_attr)[
-               data.train_mask], data.y[data.train_mask])
+    logits = model(data.x, data.edge_index, data.edge_attr)
+    loss = F.nll_loss(logits[data.train_mask], data.y[data.train_mask])
     loss.backward()
     print(loss)
     optimizer.step()
@@ -122,3 +122,5 @@ for epoch in range(1, args.epochs):
             print(
                 f'early stop, best test acc is: {best_test_acc}, best epoch is {best_epoch}')
             exit(0)
+
+print(f'train finished, best test acc is: {best_test_acc}, best epoch is {best_epoch}')
